@@ -3,7 +3,6 @@ import requests
 import argparse
 from datetime import datetime, timedelta
 from git import Repo, Actor
-from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser(description='Copy a user\'s Github commit activity')
@@ -24,16 +23,13 @@ def main():
     repo = Repo(args.repo_dir)
     assert not repo.bare
 
-    dummy_file = Path(args.repo_dir, 'dummy_file')
     index = repo.index
 
     author = Actor(args.name, args.email)
 
     for contrib in contribs:
         for i in range(contrib.count):
-            dummy_file.touch()
-            index.add([dummy_file.as_posix()])
-            commit = index.commit('dummy commit', author=author, committer=author, author_date=contrib.date.isoformat())
+            commit = index.commit('', author=author, committer=author, author_date=contrib.date.isoformat())
             assert commit.type == 'commit'
 
 class DayContribs:
