@@ -16,9 +16,10 @@ def main():
     tree = html.fromstring(page.content)
 
     days = tree.xpath('//*[@id="contributions-calendar"]/div[1]/svg/g/g/rect')
-    contribs = []
+    contribs = {}
     for day in days:
-        contribs.append(DayContribs(day))
+        date = datetime.strptime(day.get('data-date'), '%Y-%m-%d')
+        contribs[date] = int(day.get('data-count'))
 
     repo = Repo(args.repo_dir)
     assert not repo.bare
@@ -32,16 +33,11 @@ def main():
     index = repo.index
     author = Actor(args.name, args.email)
 
-    for contrib in contribs:
-        for i in range(contrib.count):
-            if contrib.date > start_date:
-                commit = index.commit('', author=author, committer=author, author_date=contrib.date.isoformat())
+    for date in contribs:
+        for i in range(contribs[date]):
+            if date > start_date:
+                commit = index.commit('', author=author, committer=author, author_date=date.isoformat())
                 assert commit.type == 'commit'
-
-class DayContribs:
-    def __init__(self, element):
-        self.count = int(element.get('data-count'))
-        self.date = datetime.strptime(element.get('data-date'), '%Y-%m-%d')
 
 if __name__ == '__main__':
     main()
